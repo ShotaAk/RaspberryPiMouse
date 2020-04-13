@@ -1,0 +1,33 @@
+name: Continuous Integration
+on: push
+
+jobs:
+  unit-test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    env:
+        RPI_LINUX_VER: rpi-4.1.y
+        CONFIG_FILE: config-4.1.21-v7+
+        RPI_LINUX_COMMIT_HASH: ff45bc0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.0.0
+      - name: install
+        run: |
+            export REPOSITORY_DIR=$(pwd) && echo $REPOSITORY_DIR
+            mkdir -p $HOME/repo/raspberrypi
+            if [ -e $HOME/repo/raspberrypi/tools ]; then (cd $HOME/repo/raspberrypi/tools && git pull); else (cd $HOME/repo/raspberrypi && git clone --depth 1 https://github.com/raspberrypi/tools.git); fi
+      - name: Build raspberrypi linux
+        run: |
+            if [ -e $HOME/repo/raspberrypi/linux ]; then (cd $HOME/repo/raspberrypi/linux && git fetch origin && git checkout $RPI_LINUX_VER && git pull); else (cd $HOME/repo/raspberrypi && git clone -b $RPI_LINUX_VER https://github.com/raspberrypi/linux.git); fi
+            cd $HOME/repo/raspberrypi/linux && make clean && git reset --hard HEAD && git checkout $RPI_LINUX_COMMIT_HASH
+            cp $GITHUB_WORKSPACE/.test/$CONFIG_FILE $HOME/repo/raspberrypi/linux/.config
+            make CROSS_COMPILE=$HOME/repo/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf- ARCH=arm oldconfig
+            make CROSS_COMPILE=$HOME/repo/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf- ARCH=arm -j 8
+        name: Build device driver
+        run: |
+            cd $GITHUB_WORKSPACE/src/drivers
+            ls
+            make -f $GITHUB_WORKSPACE/.test/Makefile.crosscompile
+            ls
+            make -f $GITHUB_WORKSPACE/.test/Makefile.crosscompile clean
