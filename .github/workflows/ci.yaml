@@ -24,7 +24,7 @@ jobs:
             cp $GITHUB_WORKSPACE/.test/$CONFIG_FILE $HOME/repo/raspberrypi/linux/.config
             make CROSS_COMPILE=$HOME/repo/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf- ARCH=arm oldconfig
             make CROSS_COMPILE=$HOME/repo/raspberrypi/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf- ARCH=arm -j 8
-        name: Build device driver
+      - name: Build device driver
         run: |
             cd $GITHUB_WORKSPACE/src/drivers
             ls
